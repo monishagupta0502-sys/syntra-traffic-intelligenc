@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: urbanpulse-postgres
+    environment:
+      POSTGRES_DB: urbanpulse
+      POSTGRES_USER: urbanpulse
+      POSTGRES_PASSWORD: urbanpulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - urbanpulse_pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: urbanpulse-backend
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+      - ./data:/data
+      - ./models:/models
+      - ./simulation:/simulation
+
+  frontend:
+    image: node:22-alpine
+    container_name: urbanpulse-frontend
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+
+volumes:
+  urbanpulse_pgdata:
